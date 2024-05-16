@@ -79,6 +79,19 @@ public class GameManager : MonoBehaviour
         // Set Player to the Actor component of this object
         Player = GetComponent<Actor>();
     }
-    
+    public void StartEnemyTurn()
+    {
+        foreach (var enemy in GameManager.Get.Enemies)
+        {
+            // Controleer of de huidige actor een vijand is
+            Enemy enemyComponent = enemy.GetComponent<Enemy>();
+            if (enemyComponent != null)
+            {
+                // Voer de AI van de vijand uit
+                enemyComponent.RunAI();
 
+
+            }
+        }
+    }
 }
