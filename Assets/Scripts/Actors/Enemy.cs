@@ -2,47 +2,39 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
-
-
-[RequireComponent(typeof(Actor))]
 [RequireComponent(typeof(Actor), typeof(AStar))]
 public class Enemy : MonoBehaviour
-
 {
+    // Variables
     public Actor Target { get; set; }
-
-    // Variabele voor het aangeven of er een gevecht aan de gang is (isFighting)
     public bool IsFighting { get; private set; } = false;
+    private AStar algorithm;
 
-    // Variabele voor het algoritme (Algorithm)
-    public AStar Algorithm { get; private set; }
-    private void Start()
-
+    // Start is called before the first frame update
+    void Start()
     {
+        // Set algorithm to the AStar component of this script
+        algorithm = GetComponent<AStar>();
 
+        // Add the Actor component to the GameManager's Enemies list
         GameManager.Get.AddEnemy(GetComponent<Actor>());
-        Algorithm = GetComponent<AStar>();
-
-
     }
 
-    public void MoveAlongPath(Vector3Int targetPosition)
-
-    {
-
-        Vector3Int gridPosition = MapManager.Get.FloorMap.WorldToCell(transform.position);
-
-        Vector2 direction = Algorithm.Compute((Vector2Int)gridPosition, (Vector2Int)targetPosition);
-
-        Action.Move(GetComponent<Actor>(), direction);
-
-    }
-    private void Update()
+    // Update is called once per frame
+    void Update()
     {
         RunAI();
     }
 
+    // Function to move along the path to the target position
+    public void MoveAlongPath(Vector3Int targetPosition)
+    {
+        Vector3Int gridPosition = MapManager.Get.FloorMap.WorldToCell(transform.position);
+        Vector2 direction = algorithm.Compute((Vector2Int)gridPosition, (Vector2Int)targetPosition);
+        Action.Move(GetComponent<Actor>(), direction);
+    }
+
+    // Function to run the enemy AI
     public void RunAI()
     {
         // If target is null, set target to player (from gameManager)
@@ -65,5 +57,3 @@ public class Enemy : MonoBehaviour
         }
     }
 }
-
-

@@ -7,32 +7,60 @@ public class DungeonGenerator : MonoBehaviour
     private int width, height;
     private int maxRoomSize, minRoomSize;
     private int maxRooms;
-    private int maxEnemies; // Nieuwe variabele voor het maximum aantal vijanden
+    public int maxEnemies; // New attribute for the maximum number of enemies
     List<Room> rooms = new List<Room>();
 
+    // Sets the size of the dungeon
     public void SetSize(int width, int height)
     {
         this.width = width;
         this.height = height;
     }
 
+    // Sets the minimum and maximum room sizes
     public void SetRoomSize(int min, int max)
     {
         minRoomSize = min;
         maxRoomSize = max;
     }
 
+    // Sets the maximum number of rooms
     public void SetMaxRooms(int max)
     {
         maxRooms = max;
     }
 
-    // Nieuwe functie om maxEnemies in te stellen
+    // Sets the maximum number of enemies
     public void SetMaxEnemies(int max)
     {
         maxEnemies = max;
     }
 
+    // Function to place enemies in a room
+    private void PlaceEnemies(Room room, int maxEnemies)
+    {
+        // The number of enemies to spawn
+        int num = Random.Range(0, maxEnemies + 1);
+
+        for (int counter = 0; counter < num; counter++)
+        {
+            // The boundaries of the room are walls, so subtract and add 1 to avoid placing enemies on walls
+            int x = Random.Range(room.X + 1, room.X + room.Width - 1);
+            int y = Random.Range(room.Y + 1, room.Y + room.Height - 1);
+
+            // Create different enemies
+            if (Random.value < 0.5f)
+            {
+                GameManager.Get.CreateActor("Wesp", new Vector2(x, y));
+            }
+            else
+            {
+                GameManager.Get.CreateActor("Wolf", new Vector2(x, y));
+            }
+        }
+    }
+
+    // Main function to generate the dungeon
     public void Generate()
     {
         rooms.Clear();
@@ -47,21 +75,18 @@ public class DungeonGenerator : MonoBehaviour
 
             var room = new Room(roomX, roomY, roomWidth, roomHeight);
 
-            // if the room overlaps with another room, discard it
+            // If the room overlaps with another room, discard it
             if (room.Overlaps(rooms))
             {
                 continue;
             }
 
-            // add tiles make the room visible on the tilemap
+            // Add tiles to make the room visible on the tilemap
             for (int x = roomX; x < roomX + roomWidth; x++)
             {
                 for (int y = roomY; y < roomY + roomHeight; y++)
                 {
-                    if (x == roomX
-                        || x == roomX + roomWidth - 1
-                        || y == roomY
-                        || y == roomY + roomHeight - 1)
+                    if (x == roomX || x == roomX + roomWidth - 1 || y == roomY || y == roomY + roomHeight - 1)
                     {
                         if (!TrySetWallTile(new Vector3Int(x, y)))
                         {
@@ -72,11 +97,10 @@ public class DungeonGenerator : MonoBehaviour
                     {
                         SetFloorTile(new Vector3Int(x, y, 0));
                     }
-
                 }
             }
 
-            // create a coridor between rooms
+            // Create a corridor between rooms
             if (rooms.Count != 0)
             {
                 TunnelBetween(rooms[rooms.Count - 1], room);
@@ -84,38 +108,43 @@ public class DungeonGenerator : MonoBehaviour
 
             rooms.Add(room);
 
-            // Nieuwe toevoeging om vijanden te plaatsen
-            PlaceEnemies(room);
+            // Place enemies in the room
+            PlaceEnemies(room, maxEnemies);
         }
+
+        // Spawn the player in the first room
         var player = GameManager.Get.CreateActor("Player", rooms[0].Center());
     }
 
+    // Function to try and set a wall tile
     private bool TrySetWallTile(Vector3Int pos)
     {
-        // if this is a floor, it should not be a wall
+        // If this is a floor tile, it should not be a wall
         if (MapManager.Get.FloorMap.GetTile(pos))
         {
             return false;
         }
         else
         {
-            // if not, it can be a wall
+            // Otherwise, it can be a wall
             MapManager.Get.ObstacleMap.SetTile(pos, MapManager.Get.WallTile);
             return true;
         }
     }
 
+    // Function to set a floor tile
     private void SetFloorTile(Vector3Int pos)
     {
-        // this tile should be walkable, so remove every obstacle
+        // This tile should be walkable, so remove every obstacle
         if (MapManager.Get.ObstacleMap.GetTile(pos))
         {
             MapManager.Get.ObstacleMap.SetTile(pos, null);
         }
-        // set the floor tile
+        // Set the floor tile
         MapManager.Get.FloorMap.SetTile(pos, MapManager.Get.FloorTile);
     }
 
+    // Function to create a tunnel between two rooms
     private void TunnelBetween(Room oldRoom, Room newRoom)
     {
         Vector2Int oldRoomCenter = oldRoom.Center();
@@ -124,12 +153,12 @@ public class DungeonGenerator : MonoBehaviour
 
         if (Random.value < 0.5f)
         {
-            // move horizontally, then vertically
+            // Move horizontally, then vertically
             tunnelCorner = new Vector2Int(newRoomCenter.x, oldRoomCenter.y);
         }
         else
         {
-            // move vertically, then horizontally
+            // Move vertically, then horizontally
             tunnelCorner = new Vector2Int(oldRoomCenter.x, newRoomCenter.y);
         }
 
@@ -152,27 +181,6 @@ public class DungeonGenerator : MonoBehaviour
                         continue;
                     }
                 }
-            }
-        }
-    }
-
-    // Nieuwe functie om vijanden te plaatsen in een kamer
-    private void PlaceEnemies(Room room)
-    {
-        int num = Random.Range(0, maxEnemies + 1);
-
-        for (int counter = 0; counter < num; counter++)
-        {
-            int x = Random.Range(room.X + 1, room.X + room.Width - 1);
-            int y = Random.Range(room.Y + 1, room.Y + room.Height - 1);
-
-            if (Random.value < 0.5f)
-            {
-                GameManager.Get.CreateActor("Pig", new Vector2(x, y));
-            }
-            else
-            {
-                GameManager.Get.CreateActor("Snake", new Vector2(x, y));
             }
         }
     }
